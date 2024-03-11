@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nucoin-backend-auth-service-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: nucoin-backend-auth-service
+  template:
+    metadata:
+      labels:
+        component: nucoin-backend-auth-service
+    spec:
+      containers:
+        - name: nucoin-backend-auth-service
+          image: 552230012237.dkr.ecr.ap-southeast-2.amazonaws.com/svc-nucoin-auth:BITBUCKET_COMMIT
+          ports:
+            - containerPort: 3001
+          env:
+            - name: PORT
+              value: '3001'
+            - name: NODE_ENV
+              value: 'k8s'
+            - name: CUSTOMER_DB_DATABASE_NAME
+              value: customer_db_dev
+            - name: DB_HOST
+              value: database-1.cluster-c6igmdtt6ub8.ap-southeast-2.rds.amazonaws.com
+            - name: CUSTOMER_DB_USER
+              value: customer_db_user_dev
+            - name: CUSTOMER_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: customerdbpwd
+                  key: CUSTOMER_DB_PASSWORD
+            - name: TWILIO_ACCOUNT_SID
+              valueFrom:
+                secretKeyRef:
+                  name: twilioaccount
+                  key: TWILIO_ACCOUNT_SID
+            - name: TWILIO_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: twilioaccount
+                  key: TWILIO_AUTH_TOKEN
+            - name: TWILIO_PHONE_NUMBER
+              valueFrom:
+                secretKeyRef:
+                  name: twilioaccount
+                  key: TWILIO_PHONE_NUMBER
+            - name: KYC_DB_USER
+              value: ai_kyc_db_user_dev
+            - name: KYC_DB_DATABASE_NAME
+              value: ai_kyc_db_dev
+            - name: KYC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kycdbuser
+                  key: KYC_DB_PASSWORD
+            - name: S3_BUCKET_NAME
+              value: nuc-kyc
+            - name: S3_BUCKET_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: s3credentials
+                  key: S3_BUCKET_ACCESS_KEY_ID
+            - name: S3_BUCKET_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: s3credentials
+                  key: S3_BUCKET_SECRET_ACCESS_KEY
+            - name: S3_BUCKET_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: s3credentials
+                  key: S3_BUCKET_SECRET_ACCESS_KEY
+            - name: USER_SERVICES_API_URL
+              value: https://dev.usiwalletapi.urip.com
+            - name: BACKEND_URL
+              value: https://dev.api.urip.com
+      imagePullSecrets:
+        - name: docker-access-token

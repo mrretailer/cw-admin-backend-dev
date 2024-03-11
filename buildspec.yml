@@ -1,0 +1,28 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+      python: 3.11
+    commands:
+      - aws --version
+      - pip3 --version
+      - pip3 install --upgrade awscli
+  pre_build:
+    commands:
+      - aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ECR_URL
+  build:
+    commands:
+      - "echo Build started on `date`"
+      #- aws s3 cp $ENV ./app/cw-admin-backend/.
+      - "echo Building the Docker image..."
+      - docker build -t cw-admin-backend .
+      - docker tag cw-admin-backend:latest $ECR_NAME 
+  post_build:
+    commands:
+      - "echo Build completed on `date`"
+      - "echo Pushing the Docker image..."
+      - "docker push $ECR_NAME"
+      - printf '[{"name":"cw-admin-backend","imageUri":"%s"}]' $ECR_NAME > imagedefinitions.json
+artifacts:
+  files: imagedefinitions.json

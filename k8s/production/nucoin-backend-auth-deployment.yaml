@@ -1,0 +1,133 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nucoin-backend-auth-service-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      component: nucoin-backend-auth-service
+  template:
+    metadata:
+      labels:
+        component: nucoin-backend-auth-service
+    spec:
+      containers:
+        - name: nucoin-backend-auth-service
+          image: 868663323311.dkr.ecr.ap-southeast-2.amazonaws.com/svc-nucoin-auth:BITBUCKET_COMMIT
+          ports:
+            - containerPort: 3002
+          env:
+            - name: PORT
+              value: '3002'
+            - name: NODE_ENV
+              value: 'k8s'
+            - name: CUSTOMER_DB_DATABASE_NAME
+              value: customer_db_prd
+            - name: DB_HOST
+              value: database-p-v2.cqz56wfzfaqn.ap-southeast-2.rds.amazonaws.com
+            - name: CUSTOMER_DB_USER
+              value: customer_db_user_prd
+            - name: CUSTOMER_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: customerdbpwd
+                  key: CUSTOMER_DB_PASSWORD
+            - name: TWILIO_ACCOUNT_SID
+              valueFrom:
+                secretKeyRef:
+                  name: twilioaccount
+                  key: TWILIO_ACCOUNT_SID
+            - name: TWILIO_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: twilioaccount
+                  key: TWILIO_AUTH_TOKEN
+            - name: TWILIO_PHONE_NUMBER
+              valueFrom:
+                secretKeyRef:
+                  name: twilioaccount
+                  key: TWILIO_PHONE_NUMBER
+            - name: KYC_DB_USER
+              value: ai_kyc_db_user_prd
+            - name: KYC_DB_DATABASE_NAME
+              value: ai_kyc_db_prd
+            - name: KYC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kycdbuser
+                  key: KYC_DB_PASSWORD
+            - name: BLOCKCHAIN_DB_BACKOFFICE_DB_USER
+              value: back_office_admin_db_user_prd
+            - name: BLOCKCHAIN_DB_BACKOFFICE_DB_DATABASE
+              value: blockchain_db_prd
+            - name: BLOCKCHAIN_DB_BACKOFFICE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: blockchainbackofficedb
+                  key: BLOCKCHAIN_DB_BACKOFFICE_DB_PASSWORD
+            - name: BACKOFFICE_DB_USER
+              value: back_office_db_user_prd
+            - name: BACKOFFICE_DB_DATABASE_NAME
+              value: back_office_platform_db_prd
+            - name: BACKOFFICE_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: backofficesbpassword
+                  key: BACKOFFICE_DB_PASSWORD
+            - name: PAYMENT_DB_USER
+              value: payment_platform_db_user_prd
+            - name: PAYMENT_DB_DATABASE_NAME
+              value: payment_platform_db_prd
+            - name: PAYMENT_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: paymentdbpassword
+                  key: PAYMENT_DB_PASSWORD
+            - name: S3_BUCKET_NAME
+              value: '868663323311-nuc-kyc'
+            - name: S3_BUCKET_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: s3credentials
+                  key: S3_BUCKET_ACCESS_KEY_ID
+            - name: S3_BUCKET_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: s3credentials
+                  key: S3_BUCKET_SECRET_ACCESS_KEY
+            - name: ADMIN_TOKEN_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwtsecrets
+                  key: ADMIN_TOKEN_SECRET_KEY
+            - name: OTHER_ADMIN_TOKEN_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwtsecrets
+                  key: OTHER_ADMIN_TOKEN_SECRET_KEY
+            - name: OTHER_ADMIN_TOKEN_2_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwtsecrets
+                  key: OTHER_ADMIN_TOKEN_2_SECRET_KEY
+            - name: BLOCKCHAIN_DB_USER
+              value: bc_db_user_prd
+            - name: BLOCKCHAIN_DB_DATABASE_NAME
+              value: blockchain_db_prd
+            - name: BLOCKCHAIN_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: blockchaindbpassword
+                  key: BLOCKCHAIN_DB_PASSWORD
+            - name: WEL_NUC_SMTP_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: welcomenucsmptppwd
+                  key: WEL_NUC_SMTP_PWD
+            - name: USER_SERVICES_API_URL
+              value: https://usiwalletapi.nucoin.com.au
+            - name: BACKEND_URL
+              value: https://svcapi.nucoin.com.au
+      imagePullSecrets:
+        - name: docker-access-token

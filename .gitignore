@@ -1,0 +1,11 @@
+node_modules
+junk/
+.idea
+build
+
+# Package files
+package-lock.json
+yarn.lock
+test.js
+test1.js
+.env

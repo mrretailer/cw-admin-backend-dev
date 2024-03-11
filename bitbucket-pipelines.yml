@@ -1,0 +1,77 @@
+image: atlassian/default-image:2
+
+pipelines:
+  branches:
+    release/*:
+      - step:
+          name: "Build and push"
+          size: 1x
+          services:
+            - docker
+          script:
+            - apt-get update && apt-get install -y awscli
+            - apt-get update && apt-get install -y apt-transport-https ca-certificates curl
+            - curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+            - echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+            - apt-get update && apt-get install -y kubectl
+            - aws configure set aws_access_key_id ${ACCESS_ID_DEV}
+            - aws configure set aws_secret_access_key ${ACCESS_SECRET_DEV}
+            - aws configure set default.region "ap-southeast-2"
+            - IMAGE="svc-nucoin-auth:${BITBUCKET_COMMIT}"
+            - aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin 868663323311.dkr.ecr.ap-southeast-2.amazonaws.com
+            - docker build -t ${IMAGE} . -f Dockerfile 
+            - docker tag ${IMAGE} 868663323311.dkr.ecr.ap-southeast-2.amazonaws.com/${IMAGE}
+            - docker push 868663323311.dkr.ecr.ap-southeast-2.amazonaws.com/${IMAGE}
+            - aws eks --region ap-southeast-2 update-kubeconfig --name eks-nucoin-cluster
+            - cd k8s/production  && sed -ie "s/BITBUCKET_COMMIT/$(echo $BITBUCKET_COMMIT)/g" nucoin-backend-auth-deployment.yaml
+            - kubectl apply -f nucoin-backend-auth-deployment.yaml
+    # staging:
+    #   - step:
+    #       name: "Build and push"
+    #       size: 1x
+    #       services:
+    #         - docker
+    #       script:
+    #         - apt-get update && apt-get install -y awscli
+    #         - apt-get update && apt-get install -y apt-transport-https ca-certificates curl
+    #         - curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    #         - echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+    #         - apt-get update && apt-get install -y kubectl
+    #         - aws configure set aws_access_key_id ${ACCESS_ID_DEV}
+    #         - aws configure set aws_secret_access_key ${ACCESS_SECRET_DEV}
+    #         - aws configure set default.region "ap-southeast-2"
+    #         - IMAGE="svc-nucoin-auth:${BITBUCKET_COMMIT}-stg"
+    #         - aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin 552230012237.dkr.ecr.ap-southeast-2.amazonaws.com
+    #         - docker build -t ${IMAGE} . -f Dockerfile 
+    #         - docker tag ${IMAGE} 552230012237.dkr.ecr.ap-southeast-2.amazonaws.com/${IMAGE}
+    #         - docker push 552230012237.dkr.ecr.ap-southeast-2.amazonaws.com/${IMAGE}
+    #         - aws eks --region ap-southeast-2 update-kubeconfig --name eks-stagging
+    #         - cd k8s/staging  && sed -ie "s/BITBUCKET_COMMIT/$(echo $BITBUCKET_COMMIT)/g" nucoin-backend-auth-deployment.yaml
+    #         - kubectl apply -f nucoin-backend-auth-deployment.yaml
+    # development:
+    #   - step:
+    #       name: "Build and push"
+    #       size: 1x
+    #       services:
+    #         - docker
+    #       script:
+    #         - apt-get update && apt-get install -y awscli
+    #         - apt-get update && apt-get install -y apt-transport-https ca-certificates curl
+    #         - curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    #         - echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+    #         - apt-get update && apt-get install -y kubectl
+    #         - aws configure set aws_access_key_id ${ACCESS_ID_DEV}
+    #         - aws configure set aws_secret_access_key ${ACCESS_SECRET_DEV}
+    #         - aws configure set default.region "ap-southeast-2"
+    #         - IMAGE="svc-nucoin-auth:${BITBUCKET_COMMIT}"
+    #         - aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin 552230012237.dkr.ecr.ap-southeast-2.amazonaws.com
+    #         - docker build -t ${IMAGE} . -f Dockerfile 
+    #         - docker tag ${IMAGE} 552230012237.dkr.ecr.ap-southeast-2.amazonaws.com/${IMAGE}
+    #         - docker push 552230012237.dkr.ecr.ap-southeast-2.amazonaws.com/${IMAGE}
+    #         - aws eks --region ap-southeast-2 update-kubeconfig --name eks-development-cluster 
+    #         - cd k8s/development && sed -ie "s/BITBUCKET_COMMIT/$(echo $BITBUCKET_COMMIT)-stg/g" nucoin-backend-auth-deployment.yaml
+    #         - kubectl apply -f nucoin-backend-auth-deployment.yaml
+definitions:
+  services:
+    docker:
+      memory: 3072
